@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>抖音</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    /* 顶部导航栏 */
+    .top-navigation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2.33vw;
+      background-color: #000;
+      z-index: 100;
+    }
+    /* 内容容器 */
+    .content-offset {
+      padding-top: 2.33vw;
+      height: 100%;
+      position: relative;
+    }
+    /* 底部背景图 */
+    .background-container {
+      width: 100%;
+      height: 100vh;
+      background-size: cover;
+      background-position: center -16.63vw;
+      background-repeat: no-repeat;
+    }
+    /* 横向图片区域 */
+    .horizontal-image-container {
+      position: absolute;
+      top: 6.98vw;
+      left: 0;
+      right: 0;
+      height: 27.91vw;
+      padding: 0 2.33vw;
+      z-index: 50;
+    }
+    .horizontal-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 1.86vw;
+    }
+    /* 左上角头像与信息区域（保持原有布局） */
+    .user-profile {
+      position: absolute;
+      top: 13.95vw;
+      left: 3.49vw;
+      display: flex;
+      align-items: center;
+      z-index: 60;
+    }
+    /* 头像容器（带白边和右下角加号） */
+    .avatar-container {
+      position: relative;
+      width: 23.26vw;
+      height: 23.26vw;
+      cursor: pointer;
+    }
+    /* 头像下方数字容器（新增） */
+.avatar-stats {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  /* 核心数值：调整这个百分比，实现整体右移 */
+  transform: translateX(-30%); 
+  margin-top: 3.49vw;
+  display: flex;
+  gap: 4.65vw;
+  width: max-content;
+}
+    /* 数字下方的文字容器 - 核心修改：向前（左）移动，调整left值 */
+    .stats-caption {
+      position: absolute;
+      top: 100%;
+      left: calc(50% - 43%); 
+      margin-top: 19.53vw;
+      color: #000000;
+      font-weight: normal;
+      white-space: nowrap;
+      font-size: 3.02vw;
+      text-align: left;
+      width: max-content;
+    }
+    /* 作品展示容器 */
+    .works-container {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-16%);
+      margin-top: 73.26vw;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.23vw;
+      width: 105vw;
+    }
+    /* 单个作品样式 */
+    .work-item {
+      width: 34.65vw;
+      height: 45.12vw;
+      position: relative;
+      border-radius: 0px;
+      overflow: hidden;
+      background-color: #f1f1f1;
+      cursor: pointer;
+    }
+    /* 作品图片 */
+    .work-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* 播放量容器 */
+    .play-count {
+      position: absolute;
+      bottom: 1.86vw;
+      left: 2.79vw;
+      display: flex;
+      align-items: center;
+      gap: 0.7vw;
+      color: #ffffff;
+      font-size: 2.91vw;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    /* 播放图标 */
+    .play-icon {
+      width: 2.56vw;
+      height: 2.56vw;
+      background-image: url('img/bfl.png');
+      background-size: cover;
+      background-position: center;
+    }
+    /* 播放数字样式 */
+    .play-number {
+      font-weight: 400;
+    }
+    .play-number.bold {
+      font-weight: 500;
+    }
+    /* 暂无更多文字 */
+    .no-more-text {
+      width: 100%;
+      text-align: center;
+      margin-top: 2vw;
+      color: #cccccc;
+      font-size: 2.79vw;
+      font-weight: 400;
+      -webkit-text-stroke: 0.12vw #999999;
+      text-stroke: 0.12vw #999999;
+      white-space: nowrap;
+    }
+    /* 数字通用样式 */
+    .stat-item {
+      color: #000000;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.23vw;
+    }
+    .stat-number {
+      font-weight: 1000;
+      -webkit-text-stroke: 0.09vw #000;
+      text-stroke: 0.12vw #000;
+    }
+    .stat-unit {
+      font-weight: 1000;
+    }
+    /* 数字下方的文字标签样式 - 按要求调整 */
+    .stat-label {
+      font-size: 3.02vw; 
+      color: #999999; 
+      font-weight: 400; 
+      white-space: nowrap;
+      margin-top: -0.7vw;
+    }
+    .stat-1 {
+      transform: translate(2.79vw, 3.95vw) scale(1.05);
+    }
+    .stat-2 {
+      transform: translate(1.86vw, 3.95vw) scale(1.05);
+    }
+    .stat-3 {
+      transform: translate(2.79vw, 3.95vw) scale(1.05);
+    }
+    .stat-4 {
+      transform: translate(1.16vw, 3.95vw) scale(1.05);
+    }
+    /* 头像样式 */
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 0.47vw solid #ffffff;
+    }
+    /* 绿色圆圈 */
+    .avatar-plus-container {
+      position: absolute;
+      right: -0.47vw;
+      bottom: 0.7vw;
+      width: 6.98vw;
+      height: 6.98vw;
+      background-image: url('img/lv.png');
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      border: 0.7vw solid #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .avatar-plus {
+      color: white;
+      font-size: 5.12vw;
+      font-weight: 500;
+      transform: translateY(-0.23vw);
+    }
+    /* 文字信息容器 */
+    .user-info {
+      margin-left: 2.79vw;
+      display: flex;
+      flex-direction: column;
+    }
+    .name-wrapper {
+      display: flex;
+      align-items: center;
+    }
+    .user-name {
+      color: white;
+      font-size: 4.42vw;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .red-badge {
+      width: 4.65vw;
+      height: 4.65vw;
+      background-color: #ff2d55;
+      border-radius: 50%;
+      color: white;
+      font-size: 2.79vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 1.86vw;
+      font-weight: normal;
+    }
+
+    /* 音乐人样式 - 核心修改 */
+    .musician-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.93vw;
+      margin-bottom: 0.47vw;
+      position: relative;
+      left: 0;
+      margin-top: 0.93vw;
+    }
+    /* 音乐人图标 - 放大0.5倍 */
+    .musician-icon {
+      width: 3.49vw;
+      height: 3.49vw;
+      display: inline-block;
+      background-image: url('img/yyr.png');
+      background-size: cover;
+      background-position: center;
+      vertical-align: middle;
+    }
+    /* 音乐人文字 - 改为纯白色 */
+    .musician-text {
+      color: #ffffff;
+      font-size: 2.79vw;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .douyin-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.93vw;
+      position: relative;
+      left: 0;
+      margin-top: 1.4vw;
+    }
+    .douyin-account {
+      color: rgba(240, 240, 240, 0.7);
+      font-size: 2.56vw;
+      font-weight: normal;
+      margin-top: 0;
+      line-height: 1.2;
+    }
+    .qr-icon {
+      width: 2.56vw;
+      height: 2.56vw;
+      margin-top: 0;
+      background-image: url('img/qr_code.png');
+      background-size: cover;
+      background-position: center;
+    }
+    /* 弹窗样式 */
+    .modal-mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-mask.show {
+      display: flex;
+    }
+    .modal-container {
+      width: 85%;
+      max-width: 400px;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .form-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .file-upload {
+      display: block;
+      padding: 10px;
+      border: 1px dashed #ddd;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      background: #eee;
+      color: #666;
+    }
+    .btn-save {
+      background: #ff2d55;
+      color: white;
+    }
+    .hidden {
+      display: none;
+    }
+    /* 数据项分组样式 */
+    .stats-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .stats-group .form-group {
+      flex: 1;
+      min-width: 120px;
+      margin-bottom: 0;
+    }
+    /* 底部导航栏 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      width: 100%;
+      height: auto;
+    }
+    .nav-img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* 媒体查询优化 */
+    @media screen and (max-width: 375px) {
+      .play-count {
+        font-size: 2.5vw;
+      }
+      .user-name {
+        font-size: 4vw;
+      }
+    }
+    @media screen and (min-width: 768px) {
+      .play-count {
+        font-size: 2vw;
+      }
+      .user-name {
+        font-size: 3.5vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="top-navigation"></div>
+    
+    <div class="content-offset">
+      <!-- 左上角头像与信息 -->
+      <div class="user-profile">
+        <div class="avatar-container" @click="openModal('profile')">
+          <img :src="avatarSrc" class="avatar" alt="用户头像">
+          <div class="avatar-plus-container">
+            <div class="avatar-plus">+</div>
+          </div>
+          <!-- 数据统计：获赞/互关/关注/粉丝 -->
+          <div class="avatar-stats">
+            <div class="stat-item stat-1">
+              <div>
+                <span class="stat-number">{{likeNum}}</span><span class="stat-unit">{{likeUnit}}</span>
+              </div>
+              <span class="stat-label">获赞</span>
+            </div>
+            <div class="stat-item stat-2">
+              <div>
+                <span class="stat-number">{{mutualNum}}</span>
+              </div>
+              <span class="stat-label">互关</span>
+            </div>
+            <div class="stat-item stat-3">
+              <div>
+                <span class="stat-number">{{followNum}}</span>
+              </div>
+              <span class="stat-label">关注</span>
+            </div>
+            <div class="stat-item stat-4">
+              <div>
+                <span class="stat-number">{{fansNum}}</span><span class="stat-unit">{{fansUnit}}</span>
+              </div>
+              <span class="stat-label">粉丝</span>
+            </div>
+          </div>
+          <!-- 个性签名（标签） -->
+          <div class="stats-caption">
+            {{signatureText}}
+          </div>
+          <!-- 作品展示 -->
+          <div class="works-container">
+            <div class="work-item" @click.stop="openModal('work', 0)">
+              <img :src="workImgs[0]" class="work-img" alt="作品1"> 
+              <div class="play-count">
+                <div class="play-icon"></div> 
+                <div class="play-number">{{workPlays[0]}}</div>
+              </div>
+            </div>
+            <div class="work-item" @click.stop="openModal('work', 1)">
+              <img :src="workImgs[1]" class="work-img" alt="作品2"> 
+              <div class="play-count">
+                <div class="play-icon"></div> 
+                <div class="play-number">{{workPlays[1]}}</div>
+              </div>
+            </div>
+            <div class="work-item" @click.stop="openModal('work', 2)">
+              <img :src="workImgs[2]" class="work-img" alt="作品3"> 
+              <div class="play-count">
+                <div class="play-icon"></div> 
+                <div class="play-number" :class="{bold: !workPlays[2].includes('万')}">{{workPlays[2]}}</div>
+              </div>
+            </div>
+            <div class="work-item" @click.stop="openModal('work', 3)">
+              <img :src="workImgs[3]" class="work-img" alt="作品4"> 
+              <div class="play-count">
+                <div class="play-icon"></div> 
+                <div class="play-number">{{workPlays[3]}}</div>
+              </div>
+            </div>
+            <div class="work-item" @click.stop="openModal('work', 4)">
+              <img :src="workImgs[4]" class="work-img" alt="作品5"> 
+              <div class="play-count">
+                <div class="play-icon"></div> 
+                <div class="play-number">{{workPlays[4]}}</div>
+              </div>
+            </div>
+            <div class="work-item" @click.stop="openModal('work', 5)">
+              <img :src="workImgs[5]" class="work-img" alt="作品6"> 
+              <div class="play-count">
+                <div class="play-icon"></div> 
+                <div class="play-number">{{workPlays[5]}}</div>
+              </div>
+            </div>
+            <div class="no-more-text">暂时没有更多了</div>
+          </div>
+        </div>
+        
+        <div class="user-info">
+          <div class="name-wrapper">
+            <div class="user-name">{{userName}}</div>
+            <div class="red-badge">{{badgeNum}}</div>
+          </div>
+
+          <!-- 音乐人（带图标） -->
+          <div class="musician-wrapper">
+            <span class="musician-icon"></span>
+            <span class="musician-text">音乐制作人、音乐人</span>
+          </div>
+
+          <div class="douyin-wrapper">
+            <div class="douyin-account">抖音号: {{douyinId}}</div>
+            <div class="qr-icon"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="horizontal-image-container">
+        <img src="img/zhongjian.png" class="horizontal-image" alt="横向图片">
+      </div>
+      
+      <div class="background-container" :style="{ backgroundImage: `url('img/11111.JPG')` }"></div>
+    </div>
+
+    <!-- 个人信息编辑弹窗 -->
+    <div class="modal-mask" :class="{show: currentModal === 'profile'}">
+      <div class="modal-container">
+        <div class="modal-close" @click="closeModal">×</div>
+        <div class="modal-title">编辑个人信息</div>
+        
+        <!-- 头像上传 -->
+        <div class="form-group">
+          <label class="form-label">更换头像</label>
+          <label class="file-upload" for="avatar-upload">点击选择图片</label>
+          <input type="file" id="avatar-upload" class="hidden" accept="image/*" @change="uploadAvatar">
+        </div>
+        
+        <!-- 基础信息 -->
+        <div class="form-group">
+          <label class="form-label">昵称</label>
+          <input type="text" class="form-input" v-model="tempUserName" placeholder="请输入昵称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">抖音号</label>
+          <input type="text" class="form-input" v-model="tempDouyinId" placeholder="请输入抖音号">
+        </div>
+        <div class="form-group">
+          <label class="form-label">徽章数字</label>
+          <input type="number" class="form-input" v-model="tempBadgeNum" placeholder="请输入数字">
+        </div>
+        
+        <!-- 核心数据分组 -->
+        <div class="form-label" style="margin-top: 10px;">核心数据</div>
+        <div class="stats-group">
+          <div class="form-group">
+            <label class="form-label">获赞数</label>
+            <div style="display: flex; gap: 5px;">
+              <input type="text" class="form-input" v-model="tempLikeNum" placeholder="数字">
+              <input type="text" class="form-input" v-model="tempLikeUnit" placeholder="单位" style="width: 60px;">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">互关数</label>
+            <input type="text" class="form-input" v-model="tempMutualNum" placeholder="数字">
+          </div>
+        </div>
+        <div class="stats-group">
+          <div class="form-group">
+            <label class="form-label">关注数</label>
+            <input type="text" class="form-input" v-model="tempFollowNum" placeholder="数字">
+          </div>
+          <div class="form-group">
+            <label class="form-label">粉丝数</label>
+            <div style="display: flex; gap: 5px;">
+              <input type="text" class="form-input" v-model="tempFansNum" placeholder="数字">
+              <input type="text" class="form-input" v-model="tempFansUnit" placeholder="单位" style="width: 60px;">
+            </div>
+          </div>
+        </div>
+        
+        <!-- 个性签名（标签） -->
+        <div class="form-group">
+          <label class="form-label">个性签名（标签）</label>
+          <input type="text" class="form-input" v-model="tempSignatureText" placeholder="请输入签名文字">
+        </div>
+        
+        <div class="modal-buttons">
+          <button class="modal-btn btn-cancel" @click="closeModal">取消</button>
+          <button class="modal-btn btn-save" @click="saveProfile">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 作品编辑弹窗 -->
+    <div class="modal-mask" :class="{show: currentModal === 'work'}">
+      <div class="modal-container">
+        <div class="modal-close" @click="closeModal">×</div>
+        <div class="modal-title">编辑作品 {{currentWorkIdx + 1}}</div>
+        
+        <div class="form-group">
+          <label class="form-label">更换作品图片</label>
+          <label class="file-upload" for="work-upload">点击选择图片</label>
+          <input type="file" id="work-upload" class="hidden" accept="image/*" @change="uploadWorkImg">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">播放量</label>
+          <input type="text" class="form-input" v-model="tempWorkPlay" placeholder="如：1.3万 或 8924">
+        </div>
+        
+        <div class="modal-buttons">
+          <button class="modal-btn btn-cancel" @click="closeModal">取消</button>
+          <button class="modal-btn btn-save" @click="saveWork">保存</button>
+        </div>
+      </div>
+    </div>
+    <!-- 底部导航栏 -->
+    <div class="bottom-nav">
+      <img src="img/222.png" class="nav-img" alt="导航栏">
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+    createApp({
+      data() {
+        return {
+          // 基础数据
+          avatarSrc: localStorage.getItem('avatarSrc') || 'img/touxiang.png',
+          userName: localStorage.getItem('userName') || '云海',
+          douyinId: localStorage.getItem('douyinId') || '6483654734',
+          badgeNum: localStorage.getItem('badgeNum') || 2,
+          likeNum: localStorage.getItem('likeNum') || '9.2',
+          likeUnit: localStorage.getItem('likeUnit') || '万',
+          mutualNum: localStorage.getItem('mutualNum') || '156',
+          followNum: localStorage.getItem('followNum') || '200',
+          fansNum: localStorage.getItem('fansNum') || '10.1',
+          fansUnit: localStorage.getItem('fansUnit') || '万',
+          signatureText: localStorage.getItem('signatureText') || '你的创新只是我的过去',
+          workImgs: JSON.parse(localStorage.getItem('workImgs')) || ['img/yh.png', 'img/yh.png', 'img/yh.png', 'img/yh.png', 'img/yh.png', 'img/yh.png'],
+          workPlays: JSON.parse(localStorage.getItem('workPlays')) || ['1.3万', '2.8万', '8924', '5.6万', '3.2万', '1.9万'],
+          
+          // 弹窗相关
+          currentModal: null,
+          currentWorkIdx: 0,
+          
+          // 临时编辑数据
+          tempAvatarSrc: '',
+          tempUserName: '',
+          tempDouyinId: '',
+          tempBadgeNum: '',
+          tempLikeNum: '',
+          tempLikeUnit: '',
+          tempMutualNum: '',
+          tempFollowNum: '',
+          tempFansNum: '',
+          tempFansUnit: '',
+          tempSignatureText: '',
+          tempWorkImg: '',
+          tempWorkPlay: ''
+        }
+      },
+      methods: {
+        // 打开弹窗
+        openModal(type, idx = 0) {
+          this.currentModal = type;
+          this.currentWorkIdx = idx;
+          
+          if (type === 'profile') {
+            this.tempAvatarSrc = this.avatarSrc;
+            this.tempUserName = this.userName;
+            this.tempDouyinId = this.douyinId;
+            this.tempBadgeNum = this.badgeNum;
+            this.tempLikeNum = this.likeNum;
+            this.tempLikeUnit = this.likeUnit;
+            this.tempMutualNum = this.mutualNum;
+            this.tempFollowNum = this.followNum;
+            this.tempFansNum = this.fansNum;
+            this.tempFansUnit = this.fansUnit;
+            this.tempSignatureText = this.signatureText;
+          } else if (type === 'work') {
+            this.tempWorkImg = this.workImgs[idx];
+            this.tempWorkPlay = this.workPlays[idx];
+          }
+        },
+        
+        // 关闭弹窗
+        closeModal() {
+          this.currentModal = null;
+        },
+        
+        // 上传头像
+        uploadAvatar(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (res) => {
+              this.tempAvatarSrc = res.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+          }
+        },
+        
+        // 上传作品图片
+        uploadWorkImg(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (res) => {
+              this.tempWorkImg = res.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+          }
+        },
+        
+        // 保存个人信息
+        saveProfile() {
+          this.avatarSrc = this.tempAvatarSrc;
+          this.userName = this.tempUserName;
+          this.douyinId = this.tempDouyinId;
+          this.badgeNum = this.tempBadgeNum;
+          this.likeNum = this.tempLikeNum;
+          this.likeUnit = this.tempLikeUnit;
+          this.mutualNum = this.tempMutualNum;
+          this.followNum = this.tempFollowNum;
+          this.fansNum = this.tempFansNum;
+          this.fansUnit = this.tempFansUnit;
+          this.signatureText = this.tempSignatureText;
+          
+          // 保存到localStorage
+          localStorage.setItem('avatarSrc', this.avatarSrc);
+          localStorage.setItem('userName', this.userName);
+          localStorage.setItem('douyinId', this.douyinId);
+          localStorage.setItem('badgeNum', this.badgeNum);
+          localStorage.setItem('likeNum', this.likeNum);
+          localStorage.setItem('likeUnit', this.likeUnit);
+          localStorage.setItem('mutualNum', this.mutualNum);
+          localStorage.setItem('followNum', this.followNum);
+          localStorage.setItem('fansNum', this.fansNum);
+          localStorage.setItem('fansUnit', this.fansUnit);
+          localStorage.setItem('signatureText', this.signatureText);
+          
+          this.closeModal();
+          alert('个人信息保存成功！');
+        },
+        
+        // 保存作品信息
+        saveWork() {
+          this.workImgs[this.currentWorkIdx] = this.tempWorkImg;
+          this.workPlays[this.currentWorkIdx] = this.tempWorkPlay;
+          
+          // 保存到localStorage
+          localStorage.setItem('workImgs', JSON.stringify(this.workImgs));
+          localStorage.setItem('workPlays', JSON.stringify(this.workPlays));
+          
+          this.closeModal();
+          alert(`作品${this.currentWorkIdx + 1}保存成功！`);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
+    
